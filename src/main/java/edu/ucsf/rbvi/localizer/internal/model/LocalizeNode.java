@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyRow;
 
@@ -21,11 +22,11 @@ public class LocalizeNode {
 		this.confidences = confidences;
 		this.rowInfo = rowInfo;
 		this.highestConfidences = highestConfidences;
-		if(this.confidences == null)
+		if (this.confidences == null)
 			this.confidences = new HashMap<>();
-		if(this.highestConfidences == null)
+		if (this.highestConfidences == null)
 			this.highestConfidences = new ArrayList<>();
-		if(!confidences.isEmpty() && !highestConfidences.isEmpty())
+		if (!confidences.isEmpty() && !highestConfidences.isEmpty())
 			maxConfidence = confidences.get(highestConfidences.get(0));
 		else
 			maxConfidence = DEFAULT_CONFIDENCE;
@@ -34,25 +35,25 @@ public class LocalizeNode {
 	public LocalizeNode(Map<String, Integer> confidences, CyRow rowInfo) {
 		this.confidences = confidences;
 		this.rowInfo = rowInfo;
-		if(confidences == null || confidences.isEmpty())
+		if (confidences == null || confidences.isEmpty())
 			confidences = new HashMap<>();
 		highestConfidences = new ArrayList<>();
 
 		maxConfidence = MIN_CONFIDENCE;
-		if(!confidences.isEmpty()) {
-			for(String key : confidences.keySet()) {
-				if(confidences.get(key) > maxConfidence) {
+		if (!confidences.isEmpty()) {
+			for (String key : confidences.keySet()) {
+				if (confidences.get(key) > maxConfidence) {
 					maxConfidence = confidences.get(key);
 					highestConfidences.clear();
 				}
-				if(confidences.get(key) >= maxConfidence)
+				if (confidences.get(key) >= maxConfidence)
 					highestConfidences.add(key);
 			}
 		}
 	}
 
 	public int getHighestConfidenceSize() {
-		if(highestConfidences == null)
+		if (highestConfidences == null)
 			return 0;
 		return highestConfidences.size();
 	}
@@ -66,30 +67,30 @@ public class LocalizeNode {
 	}
 
 	public Integer getConfidence(String localization) {
-		if(confidences == null || confidences.isEmpty() || !confidences.containsKey(localization))
+		if (confidences == null || confidences.isEmpty() || !confidences.containsKey(localization))
 			return DEFAULT_CONFIDENCE;
 		return confidences.get(localization);
 	}
 
 	public boolean isMaxConfidence(String localization) {
-		if(highestConfidences != null && !highestConfidences.isEmpty())
+		if (highestConfidences != null && !highestConfidences.isEmpty())
 			return highestConfidences.contains(localization);
 		return false;
 	}
 
 	public boolean hasExclusiveConfidence() {
-		if(highestConfidences != null && !highestConfidences.isEmpty())
+		if (highestConfidences != null && !highestConfidences.isEmpty())
 			return highestConfidences.size() == 1;
 		return false;
 	}
 
 	public void setLocalization(String id, String localization) {
-		if(localization == null || localization.length() == 0) 
+		if (localization == null || localization.length() == 0)
 			return;
 		rowInfo.set(id, localization.substring(id.length() + 1));
 	}
 
 	public long getNodeSUID() {
-		return (Long) rowInfo.getRaw(CyNetwork.SUID);
+		return (Long) rowInfo.getRaw(CyIdentifiable.SUID);
 	}
 }

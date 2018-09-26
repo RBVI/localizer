@@ -10,7 +10,7 @@ import java.util.Set;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.event.CyEventHelper;
 import org.cytoscape.model.CyColumn;
-import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
@@ -38,14 +38,18 @@ public class LocalizerManager {
 	}
 
 	/**
-	 * network is a string network only if the network table has a confidence score, the node table has 
-	 * "@id", "species", "canonical name", and "sequence" columns, and the edge table has a "score" column 
+	 * network is a string network only if the network table has a confidence score,
+	 * the node table has "@id", "species", "canonical name", and "sequence"
+	 * columns, and the edge table has a "score" column
+	 * 
 	 * @param network to validate whether or not it is a string network
 	 * @return true if network is a string network
 	 */
 	public static boolean isStringNetwork(CyNetwork network) {
-		// This is a string network only if we have a confidence score in the network table,
-		// "@id", "species", "canonical name", and "sequence" columns in the node table, and
+		// This is a string network only if we have a confidence score in the network
+		// table,
+		// "@id", "species", "canonical name", and "sequence" columns in the node table,
+		// and
 		// a "score" column in the edge table
 		if (network == null || network.getRow(network).get(CONFIDENCE, Double.class) == null)
 			return false;
@@ -65,13 +69,14 @@ public class LocalizerManager {
 	}
 
 	/**
-	 * a network has cloned nodes if the user has previously decided to clone the network's nodes based
-	 * on a certain localization
+	 * a network has cloned nodes if the user has previously decided to clone the
+	 * network's nodes based on a certain localization
+	 * 
 	 * @param network
 	 * @return
 	 */
 	public static boolean hasClonedNodes(CyNetwork network) {
-		if(network == null || network.getDefaultNodeTable() == null)
+		if (network == null || network.getDefaultNodeTable() == null)
 			return false;
 		return network.getDefaultNodeTable().getColumn(CLONE_ID) != null;
 	}
@@ -87,17 +92,17 @@ public class LocalizerManager {
 
 	public CyNetworkView getNetworkView(CyNetwork network) {
 		Set<CyNetworkView> views = registrar.getService(CyNetworkViewManager.class).getNetworkViewSet();
-		for(CyNetworkView view : views) 
-			if(view.getModel().getSUID() == network.getSUID())
+		for (CyNetworkView view : views)
+			if (view.getModel().getSUID() == network.getSUID())
 				return view;
 		return null;
 	}
 
 	private List<String> getColumnNamesByID(CyNetwork network, String id) {
 		List<String> columnsID = new ArrayList<>();
-		for(CyColumn col : network.getDefaultNodeTable().getColumns()) {
+		for (CyColumn col : network.getDefaultNodeTable().getColumns()) {
 			String name = col.getName();
-			if(name.contains(id) && !name.equals(id))
+			if (name.contains(id) && !name.equals(id))
 				columnsID.add(name);
 		}
 		return columnsID;
@@ -108,15 +113,15 @@ public class LocalizerManager {
 		List<String> localizations = getColumnNamesByID(network, id);
 		CyTable nodeTable = network.getDefaultNodeTable();
 
-		for(CyNode node : network.getNodeList()) {
-			Map<String, Integer> confidences = new HashMap<>(); 
+		for (CyNode node : network.getNodeList()) {
+			Map<String, Integer> confidences = new HashMap<>();
 			CyRow nodeRow = nodeTable.getRow(node.getSUID());
-			for(String localization : localizations) {
-				if(nodeRow.getRaw(localization) != null) {
-					long value = (Long) nodeRow.get(localization, Long.class);
+			for (String localization : localizations) {
+				if (nodeRow.getRaw(localization) != null) {
+					long value = nodeRow.get(localization, Long.class);
 					int confidence = (int) value;
 					confidences.put(localization, confidence);
-				}  else {
+				} else {
 					confidences.put(localization, 0);
 				}
 			}
@@ -131,19 +136,19 @@ public class LocalizerManager {
 		CyNode clone = network.addNode();
 		CyTable nodeTable = network.getDefaultNodeTable();
 		CyRow nodeRow = nodeTable.getRow(clone.getSUID());
-		for(CyColumn column : nodeTable.getColumns()) {
+		for (CyColumn column : nodeTable.getColumns()) {
 			String name = column.getName();
-			if(!name.equals(CyNetwork.SUID)) {
+			if (!name.equals(CyIdentifiable.SUID)) {
 				nodeRow.set(name, nodeTable.getRow(node.getSUID()).getRaw(name));
 			}
 		}
 
-		if(view != null) {
+		if (view != null) {
 			VisualStyle currentStyle = registrar.getService(VisualMappingManager.class).getVisualStyle(view);
 			currentStyle.apply(nodeRow, view);
 		}
 
-		if(nodeTable.getColumn(id) != null) {
+		if (nodeTable.getColumn(id) != null) {
 			nodeRow.set(id, localization.substring(id.length() + 1));
 			nodeRow.set(CLONE_ID, true);
 		}
@@ -151,25 +156,22 @@ public class LocalizerManager {
 	}
 
 	public void removeClonedNodes(CyNetwork network) {
-		if(!hasClonedNodes(network))
+		if (!hasClonedNodes(network))
 			return;
 		CyTable nodeTable = network.getDefaultNodeTable();
 		Collection<CyNode> remove = new ArrayList<>();
-		for(CyNode node : network.getNodeList()) {
+		for (CyNode node : network.getNodeList()) {
 			CyRow nodeRow = nodeTable.getRow(node.getSUID());
-			if(nodeRow.getRaw(CLONE_ID) != null) {
+			if (nodeRow.getRaw(CLONE_ID) != null) {
 				boolean isClone = nodeRow.get(CLONE_ID, Boolean.class);
-				if(isClone) {
-					List<CyEdge> clonedEdges = network.getAdjacentEdgeList(node, CyEdge.Type.ANY);
-					network.removeEdges(clonedEdges);
+				if (isClone) 
 					remove.add(node);
-				}
 			}
 		}
 		network.removeNodes(remove);
 		nodeTable.deleteColumn(CLONE_ID);
 		CyNetworkView view = getNetworkView(network);
-		if(view != null)
+		if (view != null)
 			flush(view);
 	}
 }

@@ -10,7 +10,7 @@ import edu.ucsf.rbvi.localizer.internal.model.LocalizerManager;
 public class LocalizeTaskFactory extends AbstractNetworkTaskFactory implements TaskFactory {
 	private static final String TITLE = "Localize network";
 	private final LocalizerManager manager;
-	
+
 	public LocalizeTaskFactory(LocalizerManager manager) {
 		this.manager = manager;
 	}
